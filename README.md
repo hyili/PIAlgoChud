@@ -40,6 +40,21 @@ PIAlgoChud - Multithreaded Chudnovsky Algorithm for Calculating PI
 - Boost C++ Library
     - libboost-all-dev
 
+## Build
+```
+// normal build
+# make
+// -O3
+# make optim
+// debug symbol
+# make debug
+```
+
+## Test
+```
+# make test
+```
+
 ## Usage
 ```
 usage: {exe} -p {digits} [-w {workers}] [-v {version}] [(-s|-m|-sm)] [(-n)]
