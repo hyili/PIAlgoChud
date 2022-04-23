@@ -61,7 +61,7 @@ usage: {exe} -p {digits} [-w {workers}] [-v {version}] [(-s|-m|-sm)] [(-n)]
 
    -p: specify the precision of PI.
    -w: specify the number of worker.
-   -v: specify the verion of multithread implementation. Currently 1, 2, 3 is available, and default is 3.
+   -v: specify the verion of multithread implementation. Currently 1, 2, 3 is available, and default is 2.
    -s: using single thread mode to calculate PI.
    -m: using multi thread mode to calculate PI. Default.
    -sm: using both single thread and multi thread mode to calculate PI.
