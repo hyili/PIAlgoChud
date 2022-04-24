@@ -4,7 +4,7 @@ PIAlgoChud - Multithreaded Chudnovsky Algorithm for Calculating PI
 Chudnovsky is one of the fastest Algorithm for PI Calculation.
 PIAlgoChud project is an upgrade of the original single thread implementation (by komasaru).
 - Single thread source of chudnovsky with binary splitting
-	- https://gist.github.com/komasaru/68f209118edbac0700da
+    - https://gist.github.com/komasaru/68f209118edbac0700da
 - Algorithm implementation and demonstration
     - https://www.craig-wood.com/nick/articles/pi-chudnovsky/
 
@@ -14,6 +14,9 @@ PIAlgoChud project is an upgrade of the original single thread implementation (b
 - 3.00x speedup in 4 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 40,218 ms
 - 1.85x speedup in 2 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 65,307 ms
 - Single core Chudnovsky completes in 120,450 ms
+
+## TODO
+Since we use GMP as our big number library, it cannot support multithreaded multiplication. This would be the current limitation of further improving CPU utilization. I've search for other multithreaded big number library for a period, but with no luck. If possible in the future, I'll try to implement a big number library that supports multithread to solve the bottleneck.
 
 ## Prerequisition
 - C++17
@@ -77,6 +80,9 @@ usage: {exe} -p {digits} [-w {workers}] [-v {version}] [(-s|-m|-sm)] [(-n)]
 #### Verifier
 - PI world record with sample data for verification
     - http://www.numberworld.org/digits/Pi/
+#### y-cruncher
+- PI calculator from scratch, and with benchmark to GMP
+    - http://www.numberworld.org/ymp/v1.0/benchmarks.html
 
 ## Implementation Details
 - 3 versions of multithread implementation
