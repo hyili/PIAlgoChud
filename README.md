@@ -24,12 +24,30 @@ PIAlgoChud - Multithreaded Chudnovsky Algorithm for Calculating PI
 
 ## Implementation Details
 - 3 versions of multithread implementation
+    - Version 1.
+        - PQTMasterV1() distribute ReqPack into PQTWorkerV1().
+        - After that, continuously receive RespPack from PQTWorkerV1(), then we can start to run CombinePQTMasterV1() "one by one".
+        - CombinePQTMasterV1() distribute the ReqPack to PQTWorkerV1(), which do the MP multiplication in multithread worker.
+        - After combined the RespPack, return it back to ComputePQTMasterV1() for further distribution.
+        - It will have only 1 RespPack left in the end, and that is the result.
+    - Version 2.
+        - PQTMasterV2() distribute ReqPack into PQTWorkerV1().
+        - After that, different from version 1, when sliding_window ready, send MP multiplication ReqPack to worker, and go ahead to the next sliding window without waiting.
+        - Then, CombinePQTMasterV2() and CombinePQTMergerV2() will only do the MP addition based on worker result, and store the result back to ComputePQTMasterV2().
+        - It will have only 1 RespPack left in the end, and that is the result.
+    - Version 3.
+        - Based on V2, V3 migrate the addition part into worker during CombinPQTMasterV3().
+        - But this performs a little bit worse, because of the overhead on ReqPack & RespPack is more than perform addition.
+        - So, currently use PQTMasterV2() as our default implementation.
 - 3 parts of multithread stage:
-    - Part 1. binary splitting into suitable number of batch (this number must be power of 2)
+    - Part 1.
+        - binary splitting into suitable number of batch (this number must be power of 2)
         - can use all cores
-    - Part 2. master distribute the sub-task(multiplication & addition) of merge to workers, then retrieve results from them
+    - Part 2.
+        - master distribute the sub-task(multiplication & addition) of merge to workers, then retrieve results from them
         - can use all cores
-    - Part 3. merge the final result
+    - Part 3.
+        - merge the final result
         - can use only 2 cores
 
 ## Prerequisition

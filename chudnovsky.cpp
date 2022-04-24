@@ -81,11 +81,11 @@ PQT Chudnovsky::ComputePQT(int n1, int n2) {
 
 /*
  * Version 1:
- * Part 1. PQTMasterV1() distribute ReqPack into PQTWorkerV1(), and wait for merge the result.
- *         Continuously receive RespPack from PQTWorkerV1(), then we can start to run CombinePQTMasterV1() "one by one".
- * Part 2. CombinePQTMasterV1() distribute the ReqPack to PQTWorkerV1(), which do the MP multiplication in multithread.
+ * Part 1. PQTMasterV1() distribute ReqPack into PQTWorkerV1().
+ *         After that, continuously receive RespPack from PQTWorkerV1(), then we can start to run CombinePQTMasterV1() "one by one".
+ * Part 2. CombinePQTMasterV1() distribute the ReqPack to PQTWorkerV1(), which do the MP multiplication in multithread worker.
  *         After combined the RespPack, return it back to ComputePQTMasterV1() for further distribution.
- * Part 3. Only 1 RespPack left in the end, and that is the result.
+ * Part 3. It will have only 1 RespPack left in the end, and that is the result.
  */
 PQT Chudnovsky::PQTMasterV1() {
     // pack the request
@@ -207,11 +207,10 @@ void Chudnovsky::PQTWorkerV1() {
 
 /* 
  * Version 2:
- * Part 1. PQTMasterV2() distribute ReqPack into PQTWorkerV1(), and wait for merge the result.
- *         Continuously receive RespPack from PQTWorkerV1(), different from version 1, when sliding_window ready, call CombinePQTSenderV2() to preprocess before CombinePQTMasterV2().
- * Part 1.5. CombinePQTSenderV2() will pack each multiplication operation into ReqPack, and send it to PQTWorkerV1() to calculate it without waiting on the result "one by one". This method "eliminate most of the blocking period in the previous version".
- * Part 2. After the preprocess, CombinePQTMasterV2() and CombinePQTMergerV2() will only do the add operation, then store the result back to ComputePQTMasterV2().
- * Part 3. Only 1 RespPack left in the end, and that is the result.
+ * Part 1. PQTMasterV2() distribute ReqPack into PQTWorkerV1().
+ *         After that, different from version 1, when sliding_window ready, send MP multiplication ReqPack to worker, and go ahead to the next sliding window without waiting.
+ * Part 2. Then, CombinePQTMasterV2() and CombinePQTMergerV2() will only do the MP addition based on worker result, and store the result back to ComputePQTMasterV2().
+ * Part 3. It will have only 1 RespPack left in the end, and that is the result.
  */
 PQT Chudnovsky::PQTMasterV2() {
     // pack the request
@@ -328,9 +327,13 @@ void Chudnovsky::CombinePQTSenderV2(RespPack& resp_pack1, RespPack& resp_pack2) 
     resp_pack1.Invalidate();
     resp_pack2.Invalidate();
 }
-/*
- */
 
+/*
+ * Version 3:
+ * Based on V2, V3 migrate the addition part into worker during CombinPQTMasterV3().
+ * But this performs a little bit worse, because of the overhead on ReqPack & RespPack is more than perform addition.
+ * So, currently use PQTMasterV2() as our default implementation.
+ */
 PQT Chudnovsky::PQTMasterV3() {
     // pack the request
     int begin = 0, end = BATCH_SIZE_;
@@ -423,7 +426,6 @@ void Chudnovsky::Combine2PQTSenderV3(int id, std::vector<RespPack>& resp_packs, 
 }
 
 /*
- * Version 3:
  */
 void Chudnovsky::PIWorker() {
     ReqPack req_pack;
