@@ -1,15 +1,19 @@
 PIAlgoChud - Multithreaded Chudnovsky Algorithm for Calculating PI
 ===
-## Source Project (komasaru's single thread implementation)
+## Related Source Project
+Chudnovsky is one of the fastest Algorithm for PI Calculation.
+PIAlgoChud project is an upgrade of the original single thread implementation (by komasaru).
 - Single thread source of chudnovsky with binary splitting
-    - https://gist.github.com/komasaru/68f209118edbac0700da
+	- https://gist.github.com/komasaru/68f209118edbac0700da
+- Algorithm implementation and demonstration
+    - https://www.craig-wood.com/nick/articles/pi-chudnovsky/
 
 ## Feature
 - Multithread, Affinity, Blocking-Queue, Master-Worker Architect
 - 3.8x speedup in 8 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 32,904 ms
 - 2.8x speedup in 4 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 44,896 ms
 - 1.8x speedup in 2 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 69,882 ms
-- single core Chudnovsky completes in 127,179 ms
+- Single core Chudnovsky completes in 127,179 ms
 
 ## Prerequisition
 - C++17
@@ -70,8 +74,6 @@ usage: {exe} -p {digits} [-w {workers}] [-v {version}] [(-s|-m|-sm)] [(-n)]
 #### Algorithm to Calculate PI
 - An response from the world record holder of the most digits of pi
     - https://stackoverflow.com/questions/14283270/how-do-i-determine-whether-my-calculation-of-pi-is-accurate
-- Sample implementation and demonstration
-    - https://www.craig-wood.com/nick/articles/pi-chudnovsky/
 #### Verifier
 - PI world record with sample data for verification
     - http://www.numberworld.org/digits/Pi/
