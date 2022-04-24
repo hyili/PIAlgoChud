@@ -38,6 +38,7 @@ int ParseParameters(unordered_map<string, string>& config, int argc, char** argv
             config["worker"] = argv[i];
         } else {
             cerr << " [X] What is this? (" << para << ")" << endl;
+            return -1;
         }
     }
 
@@ -46,7 +47,7 @@ int ParseParameters(unordered_map<string, string>& config, int argc, char** argv
         cerr << endl;
         cerr << "   -p: specify the precision of PI." << endl;
         cerr << "   -w: specify the number of worker." << endl;
-        cerr << "   -v: specify the verion of multithread implementation. Currently 1, 2, 3 is available, and default is 2." << endl;
+        cerr << "   -v: specify the verion of multithread implementation. Currently 1, 2, 3 is available, and default is 3." << endl;
         cerr << "   -s: using single thread mode to calculate PI." << endl;
         cerr << "   -m: using multi thread mode to calculate PI. Default." << endl;
         cerr << "   -sm: using both single thread and multi thread mode to calculate PI." << endl;

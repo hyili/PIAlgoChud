@@ -56,21 +56,21 @@ void Chudnovsky::Stop() {
  * Chudnovsky Algorithm in single thread mode
  * This will be used as base method in the further versions
  */
-PQT Chudnovsky::ComputePQT(int n1, int n2) {
+NativePQT Chudnovsky::ComputePQT(int n1, int n2) {
     int mid;
-    PQT res;
+    NativePQT res;
 
     if (n1 + 1 == n2) {
-        res.P  = (2 * n2 - 1);
+        res.P = (2 * n2 - 1);
         res.P *= (6 * n2 - 1);
         res.P *= (6 * n2 - 5);
-        res.Q  = C3_24_ * n2 * n2 * n2;
-        res.T  = (A_ + B_ * n2) * res.P;
+        res.Q = C3_24_ * n2 * n2 * n2;
+        res.T = (A_ + B_ * n2) * res.P;
         if ((n2 & 1) == 1) res.T = - res.T;
     } else {
         mid = (n1 + n2) / 2;
-        PQT res1 = ComputePQT(n1, mid);
-        PQT res2 = ComputePQT(mid, n2);
+        NativePQT res1 = ComputePQT(n1, mid);
+        NativePQT res2 = ComputePQT(mid, n2);
         res.P = res1.P * res2.P;
         res.Q = res1.Q * res2.Q;
         res.T = res1.T * res2.Q + res1.P * res2.T;
@@ -131,7 +131,7 @@ PQT Chudnovsky::ComputePQTMasterV1() {
         if (resp_packs_size == 1) break;
     }
 
-    return resp_packs[resp_packs_size-1].GetResult();
+    return *resp_packs[resp_packs_size-1].GetResult();
 }
 
 /*
@@ -139,13 +139,13 @@ PQT Chudnovsky::ComputePQTMasterV1() {
 RespPack Chudnovsky::CombinePQTMasterV1(RespPack& resp_pack1, RespPack& resp_pack2) {
     RespPack resp_pack;
     PQT res;
-    PQT res1 = resp_pack1.GetResult();
-    PQT res2 = resp_pack2.GetResult();
+    std::shared_ptr<PQT> res1 = resp_pack1.GetResult();
+    std::shared_ptr<PQT> res2 = resp_pack2.GetResult();
 
-    req_pack_q.push(ReqPack(0, res1.P, res2.P));
-    req_pack_q.push(ReqPack(1, res1.Q, res2.Q));
-    req_pack_q.push(ReqPack(2, res1.T, res2.Q));
-    req_pack_q.push(ReqPack(3, res1.P, res2.T));
+    req_pack_q.push(ReqPack(0, res1->P, res2->P));
+    req_pack_q.push(ReqPack(1, res1->Q, res2->Q));
+    req_pack_q.push(ReqPack(2, res1->T, res2->Q));
+    req_pack_q.push(ReqPack(3, res1->P, res2->T));
 
     // currently do the combining sequentially, and do it one by one
     std::vector<RespPack> resp_packs = std::vector<RespPack>(4);
@@ -156,9 +156,10 @@ RespPack Chudnovsky::CombinePQTMasterV1(RespPack& resp_pack1, RespPack& resp_pac
 
     res.P = resp_packs[0].Geta();
     res.Q = resp_packs[1].Geta();
-    res.T = resp_packs[2].Geta() + resp_packs[3].Geta();
+    res.T = resp_packs[2].Geta();
+    *res.T += *resp_packs[3].Geta();
 
-    return RespPack(resp_pack1.GetID()/2, resp_pack1.GetN1(), resp_pack2.GetN2(), res);
+    return RespPack(resp_pack1.GetID()/2, resp_pack1.GetN1(), resp_pack2.GetN2(), std::make_shared<PQT>(res));
 }
 
 void Chudnovsky::PQTWorkerV1() {
@@ -172,19 +173,28 @@ void Chudnovsky::PQTWorkerV1() {
 
         if (req_pack.GetType() == TYPE_COMPUTE) {
             // do ComputePQT()
-            PQT res = ComputePQT(req_pack.GetN1(), req_pack.GetN2());
+            NativePQT native_res = ComputePQT(req_pack.GetN1(), req_pack.GetN2());
+            PQT res = {
+                .P = std::make_shared<mpz_class>(native_res.P),
+                .Q = std::make_shared<mpz_class>(native_res.Q),
+                .T = std::make_shared<mpz_class>(native_res.T)
+            };
 
             // generate a RespPack
-            RespPack resp_pack(req_pack, res);
+            RespPack resp_pack(req_pack, std::make_shared<PQT>(res));
 
             // push a RespPack
             comp_resp_pack_q.push(resp_pack);
         } else if (req_pack.GetType() == TYPE_COMBINE) {
+            // TODO: we should define a new mpz_class here
+            // because the source data is currently shared between multiple thread, can't modify them
+            // or it will cause data error
+
             // do mpz multiplicate
-            mpz_class res = req_pack.Geta() * req_pack.Getb();
+            mpz_class res = *req_pack.Geta() * *req_pack.Getb();
 
             // generate a RespPack
-            RespPack resp_pack(req_pack, res);
+            RespPack resp_pack(req_pack, std::make_shared<mpz_class>(res));
 
             // push a RespPack
             comb_resp_pack_q.push(resp_pack);
@@ -194,10 +204,11 @@ void Chudnovsky::PQTWorkerV1() {
             // do combination
             res.P = req_pack.Geta();
             res.Q = req_pack.Getb();
-            res.T = req_pack.Getc() + req_pack.Getd();
+            res.T = req_pack.Getc();
+            *res.T += *req_pack.Getd();
 
             // generate a RespPack
-            RespPack resp_pack(req_pack, res);
+            RespPack resp_pack(req_pack, std::make_shared<PQT>(res));
 
             // push a RespPack
             comp_resp_pack_q.push(resp_pack);
@@ -251,6 +262,7 @@ PQT Chudnovsky::ComputePQTMasterV2() {
             }
 
             resp_packs_size >>= 1;
+            resp_packs.resize(resp_packs_size);
             CombinePQTMasterV2(resp_packs, resp_packs_size);
 
             sliding_window_begin = 0;
@@ -261,7 +273,7 @@ PQT Chudnovsky::ComputePQTMasterV2() {
         if (resp_packs_size == 1) break;
     }
 
-    return resp_packs[resp_packs_size-1].GetResult();
+    return *resp_packs[resp_packs_size-1].GetResult();
 }
 
 /*
@@ -277,7 +289,7 @@ void Chudnovsky::CombinePQTMasterV2(std::vector<RespPack>& parent_resp_packs, si
 
         while (sliding_window_end < resp_packs_size && CombinePQTCheckResultV2(resp_packs, sliding_window_begin, sliding_window_end)) {
             int id = sliding_window_begin >> 2;
-            parent_resp_packs[id] = RespPack(id, parent_resp_packs[id].GetN1(), parent_resp_packs[id+1].GetN2(), CombinePQTMergerV2(resp_packs, sliding_window_begin));
+            parent_resp_packs[id] = RespPack(id, std::make_shared<PQT>(CombinePQTMergerV2(resp_packs, sliding_window_begin)));
 
             if (sliding_window_end != resp_packs_size-1) {
                 sliding_window_begin += 4;
@@ -297,7 +309,8 @@ PQT Chudnovsky::CombinePQTMergerV2(std::vector<RespPack>& resp_packs, int slidin
 
     res.P = resp_packs[sliding_window_begin].Geta();
     res.Q = resp_packs[sliding_window_begin+1].Geta();
-    res.T = resp_packs[sliding_window_begin+2].Geta() + resp_packs[sliding_window_begin+3].Geta();
+    res.T = resp_packs[sliding_window_begin+2].Geta();
+    *res.T += *resp_packs[sliding_window_begin+3].Geta();
 
     return res;
 }
@@ -315,14 +328,14 @@ bool Chudnovsky::CombinePQTCheckResultV2(std::vector<RespPack>& resp_packs, int 
 /* 
  */
 void Chudnovsky::CombinePQTSenderV2(RespPack& resp_pack1, RespPack& resp_pack2) {
-    PQT res1 = resp_pack1.GetResult();
-    PQT res2 = resp_pack2.GetResult();
+    std::shared_ptr<PQT> res1 = resp_pack1.GetResult();
+    std::shared_ptr<PQT> res2 = resp_pack2.GetResult();
     int res_id_base = resp_pack1.GetID()*2;
 
-    req_pack_q.push(ReqPack(res_id_base+0, res1.P, res2.P));
-    req_pack_q.push(ReqPack(res_id_base+1, res1.Q, res2.Q));
-    req_pack_q.push(ReqPack(res_id_base+2, res1.T, res2.Q));
-    req_pack_q.push(ReqPack(res_id_base+3, res1.P, res2.T));
+    req_pack_q.push(ReqPack(res_id_base+0, res1->P, res2->P));
+    req_pack_q.push(ReqPack(res_id_base+1, res1->Q, res2->Q));
+    req_pack_q.push(ReqPack(res_id_base+2, res1->T, res2->Q));
+    req_pack_q.push(ReqPack(res_id_base+3, res1->P, res2->T));
 
     resp_pack1.Invalidate();
     resp_pack2.Invalidate();
@@ -373,7 +386,8 @@ PQT Chudnovsky::ComputePQTMasterV3() {
             }
 
             resp_packs_size >>= 1;
-            CombinePQTMasterV3(resp_packs, resp_packs_size);
+            resp_packs.resize(resp_packs_size);
+            CombinePQTMasterV3(resp_packs_size);
 
             sliding_window_begin = 0;
             sliding_window_end = 1;
@@ -385,12 +399,12 @@ PQT Chudnovsky::ComputePQTMasterV3() {
         if (resp_packs_size == 1 && resp_packs[0].IsValid()) break;
     }
 
-    return resp_packs[resp_packs_size-1].GetResult();
+    return *resp_packs[resp_packs_size-1].GetResult();
 }
 
 /*
  */
-void Chudnovsky::CombinePQTMasterV3(std::vector<RespPack>& parent_resp_packs, size_t resp_packs_size) {
+void Chudnovsky::CombinePQTMasterV3(size_t resp_packs_size) {
     RespPack resp_pack;
     std::vector<RespPack> resp_packs = std::vector<RespPack>(4*resp_packs_size);
     int sliding_window_begin = 0, sliding_window_end = 3;
@@ -433,8 +447,9 @@ void Chudnovsky::PIWorker() {
     while (!terminated) {
         // wait for signal
         final_req_pack_q.pull(req_pack);
+        if (!req_pack.IsValid()) break;
         mpf_class res(sqrt((mpf_class)E_), PREC_);
-        final_resp_pack_q.push(RespPack(req_pack, res));
+        final_resp_pack_q.push(RespPack(req_pack, std::make_shared<mpf_class>(res)));
     }
 }
 
@@ -452,10 +467,10 @@ void Chudnovsky::Start(bool nout) {
     ClockStart();
 
     // Compute Pi
-    PQT PQT = ComputePQT(0, N_);
+    NativePQT native_pqt = ComputePQT(0, N_);
     mpf_class pi(0, PREC_);
-    pi = D_ * sqrt((mpf_class)E_) * PQT.Q;
-    pi /= (A_ * PQT.Q + PQT.T);
+    pi = D_ * sqrt((mpf_class)E_) * native_pqt.Q;
+    pi /= (A_ * native_pqt.Q + native_pqt.T);
 
     // Time (end of computation)
     ClockEnd(0);
@@ -502,12 +517,12 @@ void Chudnovsky::StartConcurrent(bool nout) {
     }
 
     // multithread this part
-    final_req_pack_q.push(ReqPack());
-    mpf_class F(A_ * pqt.Q + pqt.T, PREC_);
-    mpf_class pi((D_ * pqt.Q) / F, PREC_);
+    final_req_pack_q.push(ReqPack(1));
+    mpf_class F(A_ * *pqt.Q + *pqt.T, PREC_);
+    mpf_class pi((D_ * *pqt.Q) / F, PREC_);
     final_resp_pack_q.pull(resp_pack);
 
-    pi *= resp_pack.Getfa();
+    pi *= *resp_pack.Getfa();
 
     // Time (end of computation)
     ClockEnd(0);

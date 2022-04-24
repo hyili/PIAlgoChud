@@ -31,7 +31,7 @@ class Chudnovsky {
 
     void PIWorker();
     // Version 0 Entry.
-    PQT ComputePQT(int n1, int n2);
+    NativePQT ComputePQT(int n1, int n2);
     // Version 1 Entry.
     PQT PQTMasterV1();
     // Version 2 Entry.
@@ -53,7 +53,7 @@ class Chudnovsky {
 
     // Version 3 Impl.
     PQT ComputePQTMasterV3();
-    void CombinePQTMasterV3(std::vector<RespPack>& resp_packs, size_t resp_packs_size);
+    void CombinePQTMasterV3(size_t resp_packs_size);
     void Combine2PQTSenderV3(int id, std::vector<RespPack>& resp_packs, int index);
 
 public:

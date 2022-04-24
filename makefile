@@ -4,9 +4,10 @@ all:
 	g++ -std=c++17 chudnovsky.cpp -c -o chudnovsky.o
 	g++ -std=c++17 main.cpp chudnovsky.o utils.o -o pi -lgmpxx -lgmp -lpthread -lboost_thread
 performance: optim
-	./pi -p 100000000 -m -w 2 -n
-	./pi -p 100000000 -m -w 4 -n
-	./pi -p 100000000 -m -w 8 -n
+	./pi -p 100000000 -s -n
+	./pi -p 100000000 -m -v 1 -n
+	./pi -p 100000000 -m -v 2 -n
+	./pi -p 100000000 -m -v 3 -n
 optim:
 	rm -f chudnovsky.o pi
 	g++ -std=c++17 utils.cpp -c -O3 -o utils.o
@@ -20,7 +21,7 @@ hotspot: debug
 	perf record -g -F 100 --call-graph dwarf ./pi -p 10000000 -m -n
 	hotspot perf.data
 test: debug
-	rm -f verifier
+	rm -f verifier pi_concurrent.txt pi_normal.txt
 	g++ -std=c++17 verifier.cpp -o verifier
 	rm -f test_result.txt
 	./pi -p 10000 -sm -v 1; diff pi_concurrent.txt pi_normal.txt | wc -l >> test_result.txt

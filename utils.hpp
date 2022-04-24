@@ -1,9 +1,14 @@
+#include <memory>
 #include <gmpxx.h>
 
-enum PackType {TYPE_UNKNOWN, TYPE_COMPUTE, TYPE_COMBINE, TYPE_COMBINE2};
+enum PackType {TYPE_UNKNOWN, TYPE_MINIMAL, TYPE_COMPUTE, TYPE_COMBINE, TYPE_COMBINE2};
+
+struct NativePQT {
+    mpz_class P, Q, T;
+};
 
 struct PQT {
-    mpz_class P, Q, T;
+    std::shared_ptr<mpz_class> P, Q, T;
 };
 
 class ReqPack {
@@ -11,26 +16,26 @@ class ReqPack {
     int n1_;
     int n2_;
     PackType type_;
-    mpz_class a_, b_, c_, d_;
-    mpf_class fa_, fb_;
+    std::shared_ptr<mpz_class> a_, b_, c_, d_;
+    std::shared_ptr<mpf_class> fa_, fb_;
 public:
     ReqPack();
+    ReqPack(int id);
     ReqPack(int id, int n1, int n2);
-    ReqPack(int id, mpz_class& a, mpz_class& b);
-    ReqPack(int id, mpf_class& fa);
-    ReqPack(int id, mpf_class& fa, mpf_class& fb);
-    ReqPack(int id, mpz_class& a, mpz_class& b, mpz_class& c, mpz_class& d);
-    ReqPack(int id, mpz_class&& a, mpz_class&& b, mpz_class&& c, mpz_class&& d);
+    ReqPack(int id, std::shared_ptr<mpz_class> a, std::shared_ptr<mpz_class> b);
+    ReqPack(int id, std::shared_ptr<mpf_class> fa);
+    ReqPack(int id, std::shared_ptr<mpf_class> fa, std::shared_ptr<mpf_class> fb);
+    ReqPack(int id, std::shared_ptr<mpz_class> a, std::shared_ptr<mpz_class> b, std::shared_ptr<mpz_class> c, std::shared_ptr<mpz_class> d);
     int GetID();
     int GetN1();
     int GetN2();
     PackType GetType();
-    mpz_class Geta();
-    mpz_class Getb();
-    mpz_class Getc();
-    mpz_class Getd();
-    mpf_class Getfa();
-    mpf_class Getfb();
+    std::shared_ptr<mpz_class> Geta();
+    std::shared_ptr<mpz_class> Getb();
+    std::shared_ptr<mpz_class> Getc();
+    std::shared_ptr<mpz_class> Getd();
+    std::shared_ptr<mpf_class> Getfa();
+    std::shared_ptr<mpf_class> Getfb();
     void Invalidate();
     bool IsValid();
 };
@@ -39,26 +44,25 @@ class RespPack {
     int id_;
     int n1_;
     int n2_;
-    PQT result_;
+    std::shared_ptr<PQT> result_;
     PackType type_;
-    mpz_class a_;
-    mpf_class fa_;
+    std::shared_ptr<mpz_class> a_;
+    std::shared_ptr<mpf_class> fa_;
 public:
     RespPack();
-    RespPack(int id, int n1, int n2, PQT& result);
-    RespPack(int id, int n1, int n2, PQT&& result);
-    RespPack(ReqPack& rp, PQT& result);
-    RespPack(ReqPack& rp, PQT&& result);
-    RespPack(int id, mpz_class& a);
-    RespPack(ReqPack& rp, mpz_class& a);
-    RespPack(ReqPack& rp, mpf_class& fa);
+    RespPack(int id, int n1, int n2, std::shared_ptr<PQT> result);
+    RespPack(int id, std::shared_ptr<PQT> result);
+    RespPack(ReqPack& rp, std::shared_ptr<PQT> result);
+    RespPack(int id, std::shared_ptr<mpz_class> a);
+    RespPack(ReqPack& rp, std::shared_ptr<mpz_class> a);
+    RespPack(ReqPack& rp, std::shared_ptr<mpf_class> fa);
     int GetID();
     int GetN1();
     int GetN2();
-    PQT GetResult();
+    std::shared_ptr<PQT> GetResult();
     PackType GetType();
-    mpz_class Geta();
-    mpf_class Getfa();
+    std::shared_ptr<mpz_class> Geta();
+    std::shared_ptr<mpf_class> Getfa();
     void Invalidate();
     bool IsValid();
 };

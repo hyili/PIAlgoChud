@@ -9,11 +9,11 @@ PIAlgoChud project is an upgrade of the original single thread implementation (b
     - https://www.craig-wood.com/nick/articles/pi-chudnovsky/
 
 ## Feature
-- Multithread, Affinity, Blocking-Queue, Master-Worker Architect
-- 3.8x speedup in 8 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 32,904 ms
-- 2.8x speedup in 4 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 44,896 ms
-- 1.8x speedup in 2 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 69,882 ms
-- Single core Chudnovsky completes in 127,179 ms
+- Multithread, Affinity, Blocking-Queue, Master-Worker Architect, and Shared-Memory
+- 4.00x speedup in 8 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 30,395 ms
+- 3.00x speedup in 4 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 40,218 ms
+- 1.85x speedup in 2 cores with 100,000,000 digits compares to single core Chudnovsky, completes in 65,307 ms
+- Single core Chudnovsky completes in 120,450 ms
 
 ## Prerequisition
 - C++17
@@ -46,7 +46,7 @@ usage: {exe} -p {digits} [-w {workers}] [-v {version}] [(-s|-m|-sm)] [(-n)]
 
    -p: specify the precision of PI.
    -w: specify the number of worker.
-   -v: specify the verion of multithread implementation. Currently 1, 2, 3 is available, and default is 2.
+   -v: specify the verion of multithread implementation. Currently 1, 2, 3 is available, and default is 3.
    -s: using single thread mode to calculate PI.
    -m: using multi thread mode to calculate PI. Default.
    -sm: using both single thread and multi thread mode to calculate PI.
@@ -93,8 +93,7 @@ usage: {exe} -p {digits} [-w {workers}] [-v {version}] [(-s|-m|-sm)] [(-n)]
         - It will have only 1 RespPack left in the end, and that is the result.
     - Version 3.
         - Based on V2, V3 migrate the addition part into worker during CombinPQTMasterV3().
-        - But this performs a little bit worse, because of the overhead on ReqPack & RespPack is more than perform addition.
-        - So, currently use PQTMasterV2() as our default implementation.
+        - After optimize the memory allocation with shared_ptr, this performs the same as V2.
 - 3 parts of multithread stage:
     - Part 1.
         - binary splitting into suitable number of batch (this number must be power of 2)
