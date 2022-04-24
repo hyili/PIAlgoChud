@@ -59,6 +59,7 @@ PIAlgoChud - Multithreaded Chudnovsky Algorithm for Calculating PI
     - libboost-all-dev
 
 ## Build
+cd into the root of PIAlgoChud/
 ```
 // normal build
 # make
@@ -69,6 +70,7 @@ PIAlgoChud - Multithreaded Chudnovsky Algorithm for Calculating PI
 ```
 
 ## Test
+To test build, run
 ```
 # make test
 ```
