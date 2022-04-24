@@ -125,6 +125,7 @@ PQT Chudnovsky::ComputePQTMasterV1() {
             sliding_window_begin = 0;
             sliding_window_end = 1;
             resp_packs_size >>= 1;
+            resp_packs.resize(resp_packs_size);
         }
         
         // check if all workers are done, if so terminated = true, send terminate ReqPack to workers, then break myself
@@ -289,6 +290,8 @@ void Chudnovsky::CombinePQTMasterV2(std::vector<RespPack>& parent_resp_packs, si
 
         while (sliding_window_end < resp_packs_size && CombinePQTCheckResultV2(resp_packs, sliding_window_begin, sliding_window_end)) {
             int id = sliding_window_begin >> 2;
+            parent_resp_packs[id<<1].Invalidate();
+            parent_resp_packs[(id<<1)+1].Invalidate();
             parent_resp_packs[id] = RespPack(id, std::make_shared<PQT>(CombinePQTMergerV2(resp_packs, sliding_window_begin)));
 
             if (sliding_window_end != resp_packs_size-1) {
@@ -387,7 +390,7 @@ PQT Chudnovsky::ComputePQTMasterV3() {
 
             resp_packs_size >>= 1;
             resp_packs.resize(resp_packs_size);
-            CombinePQTMasterV3(resp_packs_size);
+            CombinePQTMasterV3(resp_packs, resp_packs_size);
 
             sliding_window_begin = 0;
             sliding_window_end = 1;
@@ -404,7 +407,7 @@ PQT Chudnovsky::ComputePQTMasterV3() {
 
 /*
  */
-void Chudnovsky::CombinePQTMasterV3(size_t resp_packs_size) {
+void Chudnovsky::CombinePQTMasterV3(std::vector<RespPack>& parent_resp_packs, size_t resp_packs_size) {
     RespPack resp_pack;
     std::vector<RespPack> resp_packs = std::vector<RespPack>(4*resp_packs_size);
     int sliding_window_begin = 0, sliding_window_end = 3;
@@ -415,6 +418,8 @@ void Chudnovsky::CombinePQTMasterV3(size_t resp_packs_size) {
 
         while (sliding_window_end < resp_packs_size && CombinePQTCheckResultV2(resp_packs, sliding_window_begin, sliding_window_end)) {
             int id = sliding_window_begin >> 2;
+            parent_resp_packs[id<<1].Invalidate();
+            parent_resp_packs[(id<<1)+1].Invalidate();
             Combine2PQTSenderV3(id, resp_packs, sliding_window_begin);
 
             if (sliding_window_end != resp_packs_size-1) {

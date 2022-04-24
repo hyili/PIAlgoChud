@@ -28,6 +28,12 @@ std::shared_ptr<mpf_class> ReqPack::Getfb() {return fb_;};
 bool ReqPack::IsValid() {return id_ != -1;};
 void ReqPack::Invalidate() {
     id_ = -1;
+    a_ = nullptr;
+    b_ = nullptr;
+    c_ = nullptr;
+    d_ = nullptr;
+    fa_ = nullptr;
+    fb_ = nullptr;
 };
 
 RespPack::RespPack(): id_(-1), n1_(-1), n2_(-1), result_({}), type_(TYPE_UNKNOWN) {};
@@ -47,6 +53,9 @@ std::shared_ptr<mpf_class> RespPack::Getfa() {return fa_;};
 bool RespPack::IsValid() {return id_ != -1;};
 void RespPack::Invalidate() {
     id_ = -1;
+    result_ = nullptr;
+    a_ = nullptr;
+    fa_ = nullptr;
 };
 
 static HRC_PT t_start;
