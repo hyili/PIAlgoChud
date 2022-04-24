@@ -1,6 +1,6 @@
 all:
 	rm -f chudnovsky.o pi
-	g++ -std=c++17 Utils.cpp -c -o utils.o
+	g++ -std=c++17 utils.cpp -c -o utils.o
 	g++ -std=c++17 chudnovsky.cpp -c -o chudnovsky.o
 	g++ -std=c++17 main.cpp chudnovsky.o utils.o -o pi -lgmpxx -lgmp -lpthread -lboost_thread
 performance: optim
@@ -9,7 +9,7 @@ performance: optim
 	./pi -p 100000000 -m -w 8 -n
 optim:
 	rm -f chudnovsky.o pi
-	g++ -std=c++17 Utils.cpp -c -O3 -o utils.o
+	g++ -std=c++17 utils.cpp -c -O3 -o utils.o
 	g++ -std=c++17 chudnovsky.cpp -c -O3 -o chudnovsky.o
 	g++ -std=c++17 main.cpp chudnovsky.o utils.o -O3 -o pi -lgmpxx -lgmp -lpthread -lboost_thread
 valgrind:
@@ -31,7 +31,7 @@ test: debug
 	./verifier
 debug:
 	rm -f chudnovsky.o pi
-	g++ -std=c++17 Utils.cpp -c -g -o utils.o
+	g++ -std=c++17 utils.cpp -c -g -o utils.o
 	g++ -std=c++17 chudnovsky.cpp -c -g -o chudnovsky.o
 	g++ -std=c++17 main.cpp chudnovsky.o utils.o -g -o pi -lgmpxx -lgmp -lpthread -lboost_thread
 origin:

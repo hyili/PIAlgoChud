@@ -4,7 +4,7 @@
 #include <vector>
 #include <thread>
 
-#include "Utils.hpp"
+#include "utils.hpp"
 
 #include <gmpxx.h>
 #include <boost/thread/sync_queue.hpp>

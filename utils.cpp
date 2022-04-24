@@ -2,7 +2,7 @@
 #include <thread>
 #include <chrono>
 
-#include "Utils.hpp"
+#include "utils.hpp"
 
 using HRC = std::chrono::high_resolution_clock;
 using HRC_PT = std::chrono::time_point<HRC>;
